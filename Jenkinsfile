@@ -4,12 +4,6 @@ pipeline {
     environment {
         CONTAINER_PORT = "3000"
         HOST_PORT = "3000"
-       # DOCKER_HUB_USERNAME = credentials('docker-hub-username')
-       # DOCKER_HUB_PASSWORD = credentials('docker-hub-password')
-       # EMAIL_RECIPIENTS = "@aayaninfotech.com"
-       # SONARTOKEN = credentials('sonartoken') // Securely use stored token
-       # AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-       # AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY') 
     }
 
     stages {
@@ -21,23 +15,6 @@ pipeline {
             }
         }
 
-        stage('Generate Next Image Tag') {
-            steps {
-                script {
-                    def latestTag = sh(
-                        script: '''
-                        curl -s https://hub.docker.com/v2/repositories/aayanindia/trade-hunter-backend/tags/ | \
-                        jq -r '.results[].name' | grep -E '^stage-v[0-9]+$' | sort -V | tail -n1 | awk -F'v' '{print $2}'
-                        ''',
-                        returnStdout: true
-                    ).trim()
-
-                    def newTag = latestTag ? "stage-v${latestTag.toInteger() + 1}" : "stage-v1"
-                    env.NEW_STAGE_TAG = newTag
-                    echo "🆕 New Docker Image Tag: ${newTag}"
-                }
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
