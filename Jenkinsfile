@@ -18,8 +18,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Run with bash to support 'set -eo pipefail'
                     def buildResult = sh(
                         script: '''
+                            #!/bin/bash
                             set -eo pipefail
                             echo "Building Docker image ${IMAGE_NAME}:${NEW_STAGE_TAG}..."
                             docker build -t ${IMAGE_NAME}:${NEW_STAGE_TAG} .
@@ -38,14 +40,17 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
+                    // Run with bash to support 'set -eo pipefail'
                     sh '''
+                        #!/bin/bash
+                        set -eo pipefail
                         echo "Checking for existing containers..."
                         CONTAINER_ID=$(docker ps -q --filter "ancestor=${IMAGE_NAME}:${NEW_STAGE_TAG}")
                         if [ -n "$CONTAINER_ID" ]; then
                             echo "Stopping container ${CONTAINER_ID}..."
-                            docker stop $CONTAINER_ID || echo "Failed to stop container $CONTAINER_ID or container already stopped."
+                            docker stop $CONTAINER_ID || echo "Failed to stop container ${CONTAINER_ID} or already stopped."
                             echo "Removing container ${CONTAINER_ID}..."
-                            docker rm $CONTAINER_ID || echo "Failed to remove container $CONTAINER_ID or container already removed."
+                            docker rm $CONTAINER_ID || echo "Failed to remove container ${CONTAINER_ID} or already removed."
                         else
                             echo "No container running from image ${IMAGE_NAME}:${NEW_STAGE_TAG}."
                         fi
